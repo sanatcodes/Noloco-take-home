@@ -34,3 +34,5 @@ To set up the project locally:
 1. **Clone the Repository**: `git clone https://github.com/sanatcodes/Noloco-take-home.git`
 2. **Install Dependencies**: Navigate to the project directory and run `npm install`.
 3. **Start the Application**: Execute `node app.js` to run the application.
+
+## Loom video demo [here](https://www.loom.com/share/eead62a3a65a44fca6d9e3c78988af96?sid=5878aba2-2282-4a96-8ad0-0eb67e5bfb7b)
