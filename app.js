@@ -7,6 +7,7 @@ const {
   standardiseData,
   filterData,
 } = require("./helpers");
+const { log } = require("console");
 const port = 3000;
 const dataFilePath = "./data/dubBikes.json";
 
@@ -24,6 +25,34 @@ app.get("/schema", (req, res) => {
     schema.push(generateFieldObject(key, value));
   }
   res.json(schema);
+});
+
+app.get("/data/:id", (req, res) => {
+  const data = JSON.parse(fs.readFileSync(dataFilePath));
+
+  // Reformat keys to standardised field names
+  const standardisedData = standardiseData(data);
+
+  const id = parseInt(req.params.id, 10);
+
+  // Check if id is a valid number
+  if (isNaN(id)) {
+    return res.status(400).send("Invalid ID format");
+  }
+
+  try {
+    const filteredData = standardisedData.filter((row) => row.id === id);
+
+    // Check if filtered data is empty
+    if (filteredData.length === 0) {
+      throw new Error("Data not found");
+    }
+
+    // Return the filtered data
+    res.json(filteredData[0]);
+  } catch (error) {
+    res.status(404).send(error.message);
+  }
 });
 
 app.post("/data", (req, res) => {
