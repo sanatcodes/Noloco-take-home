@@ -5,8 +5,6 @@ function cleanedName(columnName) {
 }
 
 function generateFieldObject(columnName, columnValue) {
-  
-
   // Remove punctuation and non-standard characters for camelCase conversion
   let camelCaseName = cleanedName(columnName);
 
@@ -40,4 +38,58 @@ function generateFieldObject(columnName, columnValue) {
   };
 }
 
-module.exports = { generateFieldObject, cleanedName };
+// Function to standardize data
+function standardiseData(data) {
+  return data.map((row) => {
+    const newRow = {};
+    for (const [key, value] of Object.entries(row)) {
+      newRow[cleanedName(key)] = value;
+    }
+    return newRow;
+  });
+}
+
+function filterData(whereClause, filteredData) {
+  for (const [fieldName, conditions] of Object.entries(whereClause)) {
+    for (const [operator, value] of Object.entries(conditions)) {
+      if (
+        (operator === "lt" || operator === "gt") &&
+        typeof value !== "number"
+      ) {
+        return res.status(404).send("Data not found");
+      }
+
+      // Apply filter based on the operator
+      switch (operator) {
+        case "eq":
+          filteredData = filteredData.filter(
+            (item) => item[fieldName] === value
+          );
+          break;
+        case "lt":
+          filteredData = filteredData.filter((item) => item[fieldName] < value);
+          break;
+        case "gt":
+          filteredData = filteredData.filter((item) => item[fieldName] > value);
+          break;
+        default:
+          return res.status(400).send(`Invalid operator: ${operator}`);
+      }
+    }
+  }
+
+  // Check if filtered data is empty
+  if (filteredData.length === 0) {
+    return res.status(404).send("Data not found");
+  }
+
+  // Return the filtered data
+  res.json(filteredData);
+}
+
+module.exports = {
+  filterData,
+  standardiseData,
+  generateFieldObject,
+  cleanedName,
+};
