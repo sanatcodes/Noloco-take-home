@@ -1,3 +1,14 @@
+function toCamelCase(name) {
+  return name
+    .split(" ")
+    .map((word, index) => {
+      return index === 0
+        ? word.toLowerCase()
+        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join("");
+}
+
 function cleanedName(columnName) {
   let cleanedName = columnName.replace(/[^a-zA-Z0-9 ]/g, "");
   let camelCaseName = toCamelCase(cleanedName);
@@ -49,14 +60,16 @@ function standardiseData(data) {
   });
 }
 
-function filterData(whereClause, filteredData) {
+function filterData(data, whereClause) {
+  let filteredData = data;
+
   for (const [fieldName, conditions] of Object.entries(whereClause)) {
     for (const [operator, value] of Object.entries(conditions)) {
       if (
         (operator === "lt" || operator === "gt") &&
         typeof value !== "number"
       ) {
-        return res.status(404).send("Data not found");
+        throw new Error("Data not found");
       }
 
       // Apply filter based on the operator
@@ -73,18 +86,12 @@ function filterData(whereClause, filteredData) {
           filteredData = filteredData.filter((item) => item[fieldName] > value);
           break;
         default:
-          return res.status(400).send(`Invalid operator: ${operator}`);
+          throw new Error(`Invalid operator: ${operator}`);
       }
     }
   }
 
-  // Check if filtered data is empty
-  if (filteredData.length === 0) {
-    return res.status(404).send("Data not found");
-  }
-
-  // Return the filtered data
-  res.json(filteredData);
+  return filteredData;
 }
 
 module.exports = {

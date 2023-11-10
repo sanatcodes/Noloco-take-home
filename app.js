@@ -4,8 +4,8 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const {
   generateFieldObject,
-  cleanedName,
-  standardizeData,
+  standardiseData,
+  filterData,
 } = require("./helpers");
 const port = 3000;
 const dataFilePath = "./data/dubBikes.json";
@@ -41,6 +41,12 @@ app.post("/data", (req, res) => {
 
   try {
     const filteredData = filterData(standardisedData, whereClause);
+
+    // Check if filtered data is empty
+    if (filteredData.length === 0) {
+      throw new Error("Data not found");
+    }
+
     // Return the filtered data
     res.json(filteredData);
   } catch (error) {
