@@ -21,21 +21,19 @@ function generateFieldObject(columnName, columnValue) {
 
   // Determine the data type
   function determineDataType(value) {
-    if (value === null) return "NULL"; // Handle null values
-    if (typeof value === "boolean") return "BOOLEAN"; // Check for boolean before converting to string
-    if (
-      !isNaN(parseInt(value)) &&
-      Number.isInteger(parseFloat(value)) &&
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)
-    )
-      return "INTEGER";
-    if (!isNaN(parseFloat(value))) return "FLOAT";
+    if (value === null) return "NULL";
+    if (typeof value === "boolean") return "BOOLEAN";
+
     if (typeof value === "string") {
       if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) return "DATE";
       if (["true", "false", "yes", "no"].includes(value.toLowerCase()))
         return "BOOLEAN";
+      if (!isNaN(parseFloat(value))) {
+        if (!isNaN(parseInt(value)) && /^\d+$/.test(value)) return "INTEGER";
+        return "FLOAT";
+      }
     }
-    return "TEXT"; // Default data type
+    return "TEXT";
   }
 
   let dataType = determineDataType(columnValue);
