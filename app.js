@@ -8,6 +8,7 @@ const {
   generateFieldObject,
   standardiseData,
   filterData,
+  generateSchema,
 } = require("./helpers");
 const port = 3000;
 const dataFilePath = "./data/dubBikes.json";
@@ -19,18 +20,12 @@ app.get("/", (req, res) => {
   res.send("Noloco Full Stack  Engineering Exercise");
 });
 
-// xtract schema from raw data
+// extract schema from raw data
 app.get("/schema", (req, res) => {
   const data = JSON.parse(fs.readFileSync(dataFilePath));
-  schema = [];
-  row = data[0];
-  for (const [key, value] of Object.entries(row)) {
-    //converts each row into a field object
-    schema.push(generateFieldObject(key, value));
-  }
+  const schema = generateSchema(data, 100); // 100 is the upper limit for rows to check
   res.json(schema);
 });
-
 
 // Filter data by where clause
 app.post("/data", (req, res) => {
@@ -63,32 +58,32 @@ app.post("/data", (req, res) => {
 
 // Get data by id
 app.get("/data/:id", (req, res) => {
-    const data = JSON.parse(fs.readFileSync(dataFilePath));
-  
-    // Reformat keys to standardised field names
-    const standardisedData = standardiseData(data);
-  
-    const id = parseInt(req.params.id, 10);
-  
-    // Check if id is a valid number
-    if (isNaN(id)) {
-      return res.status(400).send("Invalid ID format");
+  const data = JSON.parse(fs.readFileSync(dataFilePath));
+
+  // Reformat keys to standardised field names
+  const standardisedData = standardiseData(data);
+
+  const id = parseInt(req.params.id, 10);
+
+  // Check if id is a valid number
+  if (isNaN(id)) {
+    return res.status(400).send("Invalid ID format");
+  }
+
+  try {
+    const filteredData = standardisedData.filter((row) => row.id === id);
+
+    // Check if filtered data is empty
+    if (filteredData.length === 0) {
+      throw new Error("Data not found");
     }
-  
-    try {
-      const filteredData = standardisedData.filter((row) => row.id === id);
-  
-      // Check if filtered data is empty
-      if (filteredData.length === 0) {
-        throw new Error("Data not found");
-      }
-  
-      // Return the filtered data
-      res.json(filteredData[0]);
-    } catch (error) {
-      res.status(404).send(error.message);
-    }
-  });
+
+    // Return the filtered data
+    res.json(filteredData[0]);
+  } catch (error) {
+    res.status(404).send(error.message);
+  }
+});
 
 // Delete data by id
 app.get("/delete/data/:id", (req, res) => {

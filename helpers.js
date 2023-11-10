@@ -15,8 +15,26 @@ function cleanedName(columnName) {
   return camelCaseName;
 }
 
+function generateSchema(data, maxRows) {
+  let schema = {};
+  let rowCount = 0;
+
+  for (const row of data) {
+    if (rowCount >= maxRows) break; // Stop if upper limit is reached
+
+    for (const [key, value] of Object.entries(row)) {
+      if (!schema[key] || schema[key].type === "NULL") {
+        schema[key] = generateFieldObject(key, value);
+      }
+    }
+
+    rowCount++;
+  }
+
+  return Object.values(schema); // Convert the schema object to an array of field objects
+}
+
 function generateFieldObject(columnName, columnValue) {
-  // Remove punctuation and non-standard characters for camelCase conversion
   let camelCaseName = cleanedName(columnName);
 
   // Determine the data type
@@ -25,14 +43,18 @@ function generateFieldObject(columnName, columnValue) {
     if (typeof value === "boolean") return "BOOLEAN";
 
     if (typeof value === "string") {
+      value = value.trim(); // Trim whitespace
       if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) return "DATE";
       if (["true", "false", "yes", "no"].includes(value.toLowerCase()))
         return "BOOLEAN";
-      if (!isNaN(parseFloat(value))) {
-        if (!isNaN(parseInt(value)) && /^\d+$/.test(value)) return "INTEGER";
-        return "FLOAT";
-      }
+
+      const isInteger = /^[+-]?\d+$/.test(value);
+      const isFloat = /^[+-]?\d+(\.\d+)?$/.test(value);
+
+      if (isInteger) return "INTEGER";
+      if (isFloat) return "FLOAT";
     }
+
     return "TEXT";
   }
 
@@ -93,6 +115,7 @@ function filterData(data, whereClause) {
 }
 
 module.exports = {
+  generateSchema,
   filterData,
   standardiseData,
   generateFieldObject,
