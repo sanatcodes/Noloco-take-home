@@ -83,6 +83,32 @@ app.post("/data", (req, res) => {
   }
 });
 
+app.get("/delete/data/:id", (req, res) => {
+  const data = JSON.parse(fs.readFileSync(dataFilePath));
+  const standardisedData = standardiseData(data);
+
+  const id = parseInt(req.params.id, 10);
+
+  // Check if id is a valid number
+  if (isNaN(id)) {
+    return res.status(400).send("Invalid ID format");
+  }
+
+  try {
+    const filteredData = standardisedData.filter((row) => row.id !== id);
+
+    // Check if data not found
+    if (filteredData.length === standardisedData.length) {
+      throw new Error("Data not found");
+    }
+
+    // Return the filtered data
+    res.json(`Station with id:${id} deleted`);
+  } catch (error) {
+    res.status(404).send(error.message);
+  }
+});
+
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
