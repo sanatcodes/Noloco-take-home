@@ -25,7 +25,7 @@ I managed to add the endpoint to find a row by id and also to delete it by id. T
 
 ## Future Improvements
 
-I realised a little a late that I didn't clearly understand the Options data type. I didn't know how to differentiate that from text. If I had some more time, I would go through all of the rows in a given column to understand the spread of unique values that are not numerical. This would help me get all the potential options. Also, find the options array.
+I realised a little a late that I didn't clearly understand the Options data type. I didn't know how to differentiate that from text. If I had some more time, I would go through all of the rows in a given column to understand the spread of unique values that are not numerical. This would help me get all the potential options. Also, find the options array. Lastly, I couldn't figure out why integer classification wasn't working. Noticed it later when I was preparing for demoing on video. Would love to figure out what went wrong there.
 
 ## Instructions to run the project
 
