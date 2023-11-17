@@ -24,7 +24,7 @@ function generateSchema(data, maxRows) {
 
     for (const [key, value] of Object.entries(row)) {
       if (!schema[key] || schema[key].type === "NULL") {
-        schema[key] = generateFieldObject(key, value);
+        schema[key] = generateFieldObject(key, value, data);
       }
     }
 
@@ -34,14 +34,15 @@ function generateSchema(data, maxRows) {
   return Object.values(schema); // Convert the schema object to an array of field objects
 }
 
-function generateFieldObject(columnName, columnValue) {
+function generateFieldObject(columnName, columnValue, data) {
   let camelCaseName = cleanedName(columnName);
+  let potentialOptions = [];
 
   // Determine the data type
   function determineDataType(value) {
     if (value === null) return "NULL";
     if (typeof value === "boolean") return "BOOLEAN";
-
+    if (typeof value === "number") return "INTEGER";
     if (typeof value === "string") {
       value = value.trim(); // Trim whitespace
       if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) return "DATE";
@@ -53,6 +54,15 @@ function generateFieldObject(columnName, columnValue) {
 
       if (isInteger) return "INTEGER";
       if (isFloat) return "FLOAT";
+
+      const values = data.map((row) => row[columnName]);
+      const unqiueValues = new Set(values);
+      const optionsThresh = 20;
+
+      if (unqiueValues.size <= optionsThresh) {
+        potentialOptions = Array.from(unqiueValues);
+        return "OPTIONS";
+      }
     }
 
     return "TEXT";
@@ -65,7 +75,7 @@ function generateFieldObject(columnName, columnValue) {
     display: columnName,
     name: camelCaseName,
     type: dataType,
-    options: [],
+    options: potentialOptions.length > 0 ? potentialOptions : [],
   };
 }
 
