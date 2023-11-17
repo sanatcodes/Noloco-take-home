@@ -80,14 +80,56 @@ function generateFieldObject(columnName, columnValue, data) {
 }
 
 // Function to standardize data
-function standardiseData(data) {
+function standardiseData(data, schema) {
   return data.map((row) => {
     const newRow = {};
     for (const [key, value] of Object.entries(row)) {
-      newRow[cleanedName(key)] = value;
+      const standardisedKey = cleanedName(key);
+      newRow[standardisedKey] = formatValue(value, standardisedKey, schema);
     }
     return newRow;
   });
+}
+
+function formatValue(value, key, schema) {
+  const fieldSchema = schema.find((f) => f.name === key);
+
+  if (!fieldSchema) return value;
+
+  switch (fieldSchema.type) {
+    case "BOOLEAN":
+      return parseBoolean(value);
+    case "FLOAT":
+      return parseFloat(value);
+    case "INTEGER":
+      return parseInt(value, 10);
+    case "DATE":
+      return parseDate(value);
+    case "TEXT":
+    case "OPTION":
+      return value.toString(); // Ensuring it's a string
+    default:
+      return value;
+  }
+}
+
+function parseBoolean(value) {
+  if (typeof value === "string") {
+    value = value.trim().toLowerCase();
+    if (value === "true" || value === "yes") return true;
+    if (value === "false" || value === "no") return false;
+  }
+  return value; // Return the value as is if it's not a recognizable boolean string
+}
+
+function parseDate(value) {
+  if (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(value)
+  ) {
+    return new Date(value); // Parse the date string into a Date object
+  }
+  return value; // Return the value as is if it doesn't match the format
 }
 
 function filterData(data, whereClause) {

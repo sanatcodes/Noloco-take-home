@@ -5,7 +5,6 @@ const fs = require("fs");
 
 // Import helper functions
 const {
-  generateFieldObject,
   standardiseData,
   filterData,
   generateSchema,
@@ -30,9 +29,11 @@ app.get("/schema", (req, res) => {
 // Filter data by where clause
 app.post("/data", (req, res) => {
   const data = JSON.parse(fs.readFileSync(dataFilePath));
+  // Could also use fetch as an alternative
+  const schema = generateSchema(data, 100); // 100 is the upper limit for rows to check
 
   //reformat keys to standardised field names
-  const standardisedData = standardiseData(data);
+  const standardisedData = standardiseData(data, schema);
 
   // Return the standardised data if 'where' clause is not provided or empty
   if (!req.body.where || Object.keys(req.body.where).length === 0) {
