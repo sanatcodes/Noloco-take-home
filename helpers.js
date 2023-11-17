@@ -17,7 +17,7 @@ function cleanedName(columnName) {
 
 function generateSchema(data, maxRows) {
   let schema = {};
-  let typeCounts = {}; // Object to keep track of type counts for each column
+  let typeCounts = {};
 
   for (let i = 0; i < Math.min(maxRows, data.length); i++) {
     const row = data[i];
@@ -60,7 +60,6 @@ function generateSchema(data, maxRows) {
 function generateFieldObject(columnName, dataType, potentialOptions) {
   let camelCaseName = cleanedName(columnName);
 
-  // Generate the field object
   return {
     display: columnName,
     name: camelCaseName,
@@ -76,7 +75,7 @@ function determineDataType(value, columnName, data) {
     return Number.isInteger(value) ? "INTEGER" : "FLOAT";
   if (typeof value === "string") {
     value = value.trim(); // Trim whitespace
-    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(value)) return "DATE";
+    if (isDate(value)) return "DATE";
     if (["true", "false", "yes", "no"].includes(value.toLowerCase()))
       return "BOOLEAN";
     if (/^[+-]?\d+$/.test(value)) return "INTEGER";
@@ -92,16 +91,9 @@ function determineDataType(value, columnName, data) {
   return "TEXT";
 }
 
-// Function to standardize data
-function standardiseData(data, schema) {
-  return data.map((row) => {
-    const newRow = {};
-    for (const [key, value] of Object.entries(row)) {
-      const standardisedKey = cleanedName(key);
-      newRow[standardisedKey] = formatValue(value, standardisedKey, schema);
-    }
-    return newRow;
-  });
+function isDate(value) {
+  const date = new Date(value);
+  return !isNaN(date.getTime());
 }
 
 function formatValue(value, key, schema) {
@@ -120,10 +112,22 @@ function formatValue(value, key, schema) {
       return parseDate(value);
     case "TEXT":
     case "OPTION":
-      return value.toString(); // Ensuring it's a string
+      return value.toString();
     default:
       return value;
   }
+}
+
+// Function to standardize data
+function standardiseData(data, schema) {
+  return data.map((row) => {
+    const newRow = {};
+    for (const [key, value] of Object.entries(row)) {
+      const standardisedKey = cleanedName(key);
+      newRow[standardisedKey] = formatValue(value, standardisedKey, schema);
+    }
+    return newRow;
+  });
 }
 
 function parseBoolean(value) {
@@ -132,7 +136,7 @@ function parseBoolean(value) {
     if (value === "true" || value === "yes") return true;
     if (value === "false" || value === "no") return false;
   }
-  return value; // Return the value as is if it's not a recognizable boolean string
+  return value; // Returns default value
 }
 
 function parseDate(value) {
@@ -140,9 +144,9 @@ function parseDate(value) {
     typeof value === "string" &&
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(value)
   ) {
-    return new Date(value); // Parse the date string into a Date object
+    return new Date(value);
   }
-  return value; // Return the value as is if it doesn't match the format
+  return value; // Returns default value
 }
 
 function filterData(data, whereClause) {
